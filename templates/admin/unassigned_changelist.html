@@ -1,0 +1,14 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    {# 1. This adds our custom button #}
+    <li>
+        <a href="{% url 'admin:unassigned-trigger-optimization' %}" class="addlink">
+            {% blocktranslate %}Generate Routes for New Students{% endblocktranslate %}
+        </a>
+    </li>
+
+    {# 2. This renders the default buttons (if any) #}
+    {{ block.super }}
+{% endblock %}

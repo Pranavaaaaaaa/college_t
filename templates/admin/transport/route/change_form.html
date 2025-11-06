@@ -1,0 +1,289 @@
+{% extends "admin/change_form.html" %}
+{% load static i18n admin_urls admin_modify %}
+
+{% block title %}{% if errors %}{% translate "Error:" %} {% endif %}{{ block.super }}{% endblock %}
+{% block extrahead %}
+  {{ block.super }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        #route-map { height: 400px; margin-top: 20px; }
+
+        .leaflet-div-icon {
+            background-color: #3388ff; /* Leaflet blue */
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            border-radius: 50%; /* Make it a circle */
+            border: 2px solid white;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+            /* Vertically center the text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* We can add a little extra margin to our custom modules */
+        .map-info-section { 
+            margin-top: 20px; 
+        }
+
+        #recenter-map-btn {
+        /* Use admin theme variables for colors */
+        background: var(--button-bg); 
+        color: var(--button-fg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+
+        /* Icon styling */
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 5px 10px;
+        }
+
+        /* Add a hover effect */
+        #recenter-map-btn:hover {
+            background: var(--button-hover-bg);
+        }
+
+        /* Google's button is white in dark mode, let's mimic that */
+        body.theme-dark #recenter-map-btn {
+            background: var(--body-bg); /* Use the dark body background */
+            color: var(--body-fg);      /* Use the light text color */
+            border-color: #555;
+        }
+        body.theme-dark #recenter-map-btn:hover {
+            background: #444; /* Slightly lighter on hover */
+        }
+    </style>
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; {% if has_view_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}
+&rsaquo; {% if add %}{% blocktranslate with name=opts.verbose_name %}Add {{ name }}{% endblocktranslate %}{% else %}{{ original|truncatewords:"18" }}{% endif %}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block content %}<div id="content-main">
+{% block object-tools %}
+{% if change and not is_popup %}
+  <ul class="object-tools">
+    {% block object-tools-items %}
+      {% change_form_object_tools %}
+    {% endblock %}
+  </ul>
+{% endif %}
+{% endblock %}
+<form {% if has_file_field %}enctype="multipart/form-data" {% endif %}{% if form_url %}action="{{ form_url }}" {% endif %}method="post" id="{{ opts.model_name }}_form" novalidate>{% csrf_token %}{% block form_top %}{% endblock %}
+<div>
+{% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+{% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+{% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}{% endblock %}{% endif %}
+{% if errors %}
+    <p class="errornote">
+    {% blocktranslate count counter=errors|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+    </p>
+    {{ adminform.form.non_field_errors }}
+{% endif %}
+
+{% block field_sets %}
+{% for fieldset in adminform %}
+  {% include "admin/includes/fieldset.html" with heading_level=2 prefix="fieldset" id_prefix=0 id_suffix=forloop.counter0 %}
+{% endfor %}
+{% endblock %}
+
+{% block after_field_sets %}
+  {{ block.super }}
+    {# --- Assigned Driver Info --- #}
+    <div class="module map-info-section">
+        <h3>Assigned Driver</h3>
+        {% if assigned_driver_info %}
+            <p>
+                <strong>Username:</strong> {{ assigned_driver_info.user.username }}<br>
+                <strong>License:</strong> {{ assigned_driver_info.license_number }}
+            </p>
+        {% else %}
+            <p>No driver assigned to this route.</p>
+        {% endif %}
+    </div>
+
+    {# --- Route Description --- #}
+    <div class="module map-info-section">
+        <h3>Route Description</h3>
+        <p>{{ route_description|default:"Description unavailable." }}</p>
+    </div>
+
+    {# --- Assigned Students List --- #}
+    <div class="module map-info-section">
+        <h3>Assigned Students ({{ assigned_students.count }})</h3>
+        {% if assigned_students %}
+            <ol>
+                {% for student in assigned_students %}
+                    <li>{{ student.user.username }} (Order: {{ student.pickup_order }}) - {{ student.address }}</li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p>No students assigned to this route.</p>
+        {% endif %}
+    </div>
+
+    {# --- Map Section --- #}
+    <div class="module map-info-section">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Route Map</h3>
+            <button id="recenter-map-btn" type="button" title="Recenter Map">
+            ⌖
+            </button>
+            <div>
+                <span id="bus-status" style="margin-right: 10px; font-style: italic; color: #777;">Bus location unknown</span>
+                <button id="update-bus-location-btn" type="button">Update Bus Location</button>
+            </div>
+        </div>
+        <div id="route-map"></div>
+    </div>
+
+    {# --- JavaScript for the Map --- #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentLocations = {{ student_locations_json|default:'[]' }};
+            const routePolyline = {{ route_polyline_json|default:'[]' }};
+            const routeId = {{ original.id|default:0 }}; // Get the Route's ID
+
+            if (studentLocations.length === 0) {
+                document.getElementById('route-map').innerHTML = '<p>No student locations to display on map.</p>';
+                return;
+            }
+
+            const map = L.map('route-map').setView([studentLocations[0].lat, studentLocations[0].lng], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            const bounds = [];
+            studentLocations.forEach(loc => {
+                const latLng = [loc.lat, loc.lng];
+
+                // 1. Create the custom numbered icon
+                const numberIcon = L.divIcon({
+                    className: 'leaflet-div-icon', // Use our new CSS class
+                    html: `<span>${loc.order}</span>`, // Put the order number inside
+                    iconSize: [28, 28], // Size of the circle
+                    iconAnchor: [14, 14] // Anchor to the center
+                });
+
+                // 2. Create the marker using the new icon
+                L.marker(latLng, { icon: numberIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>${loc.order}. ${loc.name}</b><br>${loc.address}`);
+
+                bounds.push(latLng);
+            });
+
+            if (routePolyline.length > 0) {
+                L.polyline(routePolyline, { color: 'blue' }).addTo(map);
+            }
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+
+            const recenterButton = document.getElementById('recenter-map-btn');
+            recenterButton.addEventListener('click', function() {
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            });
+
+
+            // --- 2. New Bus Marker Logic ---
+            const busIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/5030/5030991.png',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+            });
+            let busMarker = null;
+            const statusText = document.getElementById('bus-status');
+            const updateButton = document.getElementById('update-bus-location-btn');
+
+            updateButton.addEventListener('click', function() {
+                statusText.textContent = 'Fetching location...';
+                updateButton.disabled = true;
+
+                // 3. Call our new API endpoint
+                fetch(`/api/transport/admin/route/${routeId}/bus-location/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.error) });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const busLatLng = [data.latitude, data.longitude];
+                        if (busMarker) {
+                            busMarker.setLatLng(busLatLng);
+                        } else {
+                            busMarker = L.marker(busLatLng, { icon: busIcon })
+                                .addTo(map)
+                                .bindPopup(`<b>${data.driver_name}</b><br>Last seen: ${new Date(data.last_seen).toLocaleString()}`);
+                        }
+                        map.panTo(busLatLng); // Center on the bus
+
+                        // Format the 'last_seen' time
+                        const lastSeenDate = new Date(data.last_seen);
+                        statusText.textContent = `Last seen: ${lastSeenDate.toLocaleTimeString()}`;
+                    })
+                    .catch(err => {
+                        statusText.textContent = `Error: ${err.message}`;
+                    })
+                    .finally(() => {
+                        updateButton.disabled = false;
+                    });
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block inline_field_sets %}
+{% for inline_admin_formset in inline_admin_formsets %}
+    {% include inline_admin_formset.opts.template %}
+{% endfor %}
+{% endblock %}
+
+{% block after_related_objects %}{% endblock %}
+
+{% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+
+{% block admin_change_form_document_ready %}
+    <script id="django-admin-form-add-constants"
+            src="{% static 'admin/js/change_form.js' %}"
+            {% if adminform and add %}
+                data-model-name="{{ opts.model_name }}"
+            {% endif %}
+            async>
+    </script>
+{% endblock %}
+
+{# JavaScript for prepopulated fields #}
+{% prepopulated_fields_js %}
+
+</div>
+</form></div>
+{% endblock %}
