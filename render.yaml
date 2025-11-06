@@ -42,7 +42,7 @@ services:
 
   # 3. The React Frontend (Static Site)
   - name: frontend
-    type: static # Specifies a static site
+    type: static_site # Specifies a static site
     plan: free # Use the free plan
     
     # --- Location of the frontend code ---
