@@ -1,13 +1,9 @@
-# This file tells Render how to deploy your project.
-
 services:
-  # 1. The Redis Server
   - name: redis-broker
     type: redis 
     plan: free 
     maxmemoryPolicy: allkeys-lru 
 
-  # 2. The Django Backend
   - name: backend
     type: web 
     plan: free 
@@ -27,9 +23,8 @@ services:
           property: connectionString
       - fromGroup: college-transport-secrets
 
-  # 3. The React Frontend
   - name: frontend
-    type: static_site # <-- THE FIX: 'static_site' (with an underscore)
+    type: static_site
     plan: free 
     
     rootDir: student-app
