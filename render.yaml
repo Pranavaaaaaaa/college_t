@@ -9,7 +9,7 @@ services:
 
   # 2. The Django Backend (ASGI Server)
   - name: backend
-    type: asgi # Specifies an ASGI server (for Django Channels)
+    type: web # Specifies an ASGI server (for Django Channels)
     plan: free # Use the free plan
     
     # --- How to build the backend ---
