@@ -1,64 +1,41 @@
 # This file tells Render how to deploy your project.
 
 services:
-  # 1. The Redis Server (Our Message Broker)
+  # 1. The Redis Server
   - name: redis-broker
-    type: redis # Specifies a Redis instance
-    plan: free # Use the free plan
-    maxmemoryPolicy: allkeys-lru # Required for free Redis instances
+    type: redis 
+    plan: free 
+    maxmemoryPolicy: allkeys-lru 
 
-  # 2. The Django Backend (ASGI Server)
+  # 2. The Django Backend
   - name: backend
-    type: web # Specifies an ASGI server (for Django Channels)
-    plan: free # Use the free plan
+    type: web 
+    plan: free 
     
-    # --- How to build the backend ---
     buildCommand: "./build.sh"
-    
-    # --- How to run the backend ---
-    # This runs Daphne (our production server) pointing to our asgi app
     startCommand: "daphne core.asgi:application --port $PORT --bind 0.0.0.0"
     
-    # --- Environment Variables ---
     envVars:
-      # Tells Django which settings file to use
       - key: DJANGO_SETTINGS_MODULE
         value: core.settings
-      
-      # Tells Django to run in production mode
       - key: DJANGO_DEBUG
         value: "False"
-      
-      # Connects our app to the Redis server we just defined
       - key: REDIS_URL
         fromService:
           type: redis
           name: redis-broker
           property: connectionString
-          
-      # --- SECRET KEYS ---
-      # We will set these in the Render dashboard after deploying
       - fromGroup: college-transport-secrets
 
-  # 3. The React Frontend (Static Site)
+  # 3. The React Frontend
   - name: frontend
-    type: static site # Specifies a static site
-    plan: free # Use the free plan
+    type: static site # <-- THE FIX: 'static site' (two words)
+    plan: free 
     
-    # --- Location of the frontend code ---
-    # This tells Render to look inside the 'student-app' folder
     rootDir: student-app
-    
-    # --- How to build the frontend ---
     buildCommand: "npm install && npm run build"
-    
-    # --- Where the final HTML/CSS/JS files are ---
-    # Create React App puts its build output in a 'build' folder
     publishDir: build
     
-    # --- URL Rewrites (Important!) ---
-    # This makes sure that if a user refreshes on '/login' or '/',
-    # they are still served the main index.html file.
     routes:
       - type: rewrite
         source: "/*"
