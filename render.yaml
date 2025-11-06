@@ -29,7 +29,7 @@ services:
 
   # 3. The React Frontend
   - name: frontend
-    type: static site # <-- THE FIX: 'static site' (two words)
+    type: static_site # <-- THE FIX: 'static_site' (with an underscore)
     plan: free 
     
     rootDir: student-app
