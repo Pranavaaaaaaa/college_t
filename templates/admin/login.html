@@ -76,8 +76,11 @@
 <script type="text/javascript">
     function handleRoleSwitch(selectElement) {
         if (selectElement.value === 'non-admin') {
-            // Redirect back to the React app's login page
-            window.location.href = 'http://localhost:3000/login';
+            // --- THIS IS THE FIX ---
+            // Use the variable we passed from urls.py
+            const frontendUrl = "{{ FRONTEND_URL }}";
+            window.location.href = `${frontendUrl}/login`;
+            // --- END FIX ---
         }
     }
 </script>
