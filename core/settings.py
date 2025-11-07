@@ -173,18 +173,8 @@ CHANNEL_LAYERS = {
 
 # core/settings.py (at the bottom)
 import os
-import firebase_admin
-from firebase_admin import credentials
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Path to your Firebase service account key
-FIREBASE_KEY_PATH = os.path.join(BASE_DIR, 'firebase-service-account.json')
-
-# Initialize the Firebase app
-
-cred = credentials.Certificate(FIREBASE_KEY_PATH)
-firebase_admin.initialize_app(cred)
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
@@ -203,7 +193,8 @@ CHANNEL_LAYERS = {
     }
 }
 
-ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0='
+# This is the new, secure line:
+ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=')
                 
 # core/settings.py (at the bottom)
 
