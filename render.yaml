@@ -24,7 +24,7 @@ services:
       - fromGroup: college-transport-secrets
 
   - name: frontend
-    type: static_site
+    type: web
     plan: free 
     
     rootDir: student-app
