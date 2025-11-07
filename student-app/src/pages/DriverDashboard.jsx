@@ -42,7 +42,12 @@ function DriverDashboard() {
 
     function connectWebSocket() {
       if (ws.current && ws.current.readyState === WebSocket.OPEN) return;
-      ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/track/?token=${token}`);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000';
+      const wsUrl = backendUrl
+                    .replace(/^https/, 'wss')
+                    .replace(/^http/, 'ws')
+                    .replace('/api', '');
+      ws.current = new WebSocket(`${wsUrl}/ws/track/?token=${token}`);
       ws.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'student_check_in') {

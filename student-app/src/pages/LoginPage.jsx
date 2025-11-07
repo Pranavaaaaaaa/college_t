@@ -47,7 +47,8 @@ function LoginPage() {
     const newRole = e.target.value;
     setRole(newRole);
     if (newRole === 'admin') {
-      window.location.href = 'http://127.0.0.1:8000/admin/login/';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL?.replace('/api', '') || 'http://127.0.0.1:8000';
+      window.location.href = `${backendUrl}/admin/login/`;
     }
   };
 

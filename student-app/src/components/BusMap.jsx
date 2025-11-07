@@ -110,8 +110,7 @@ function BusMap() {
   useEffect(() => {
         let isMounted = true;
 
-        const wsBaseUrl = (process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000')
-                        .replace(/^http/, 'ws');
+        const wsBaseUrl = (process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000').replace(/^https/, 'wss').replace(/^http/, 'ws').replace('/api', '');
 
         const connectWebSocket = () => {
             const token = localStorage.getItem('access_token');
