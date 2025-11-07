@@ -20,7 +20,8 @@ class UnassignedStudentAdmin(admin.ModelAdmin):
         # Only show students who are unassigned AND have a location set.
         return super().get_queryset(request).filter(
             route__isnull=True,
-            latitude__isnull=False
+            latitude__isnull=False,
+            user__is_staff=False
         ).select_related('user')
 
     # 4. Helper functions to get data from the related User model
