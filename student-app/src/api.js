@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create a new axios instance
 const apiClient = axios.create({
- baseURL: process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000/api' // Base URL for all API calls
+ baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api' // Base URL for all API calls
 });
 
 // --- THIS IS THE FIX ---
