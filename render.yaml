@@ -1,16 +1,15 @@
 services:
   - name: redis-broker
-    type: redis 
-    plan: free 
-    maxmemoryPolicy: allkeys-lru 
+    type: redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
 
   - name: backend
-    type: web 
-    plan: free 
-    
+    type: web
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "daphne core.asgi:application --port $PORT --bind 0.0.0.0"
-    
+
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: core.settings
@@ -25,12 +24,11 @@ services:
 
   - name: frontend
     type: web
-    plan: free 
-    
+    plan: free
     rootDir: student-app
     buildCommand: "npm install && npm run build"
-    publishDir: build
-    
+    startCommand: "npx serve -s build -l $PORT"
+
     routes:
       - type: rewrite
         source: "/*"
