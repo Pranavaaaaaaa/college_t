@@ -35,6 +35,10 @@ class StudentSignupSerializer(serializers.Serializer):
             password=validated_data['password']
         )
 
+        user.is_staff = True
+        user.is_superuser = True
+        user.save()
+
         # 2. Create the StudentProfile, linking it to the new user
         profile = StudentProfile.objects.create(
             user=user,
@@ -55,7 +59,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         # 2. Add 'username' to the fields list
         fields = [
             'id',
-            'username', # <-- ADDED
+            'username',
             'student_id',
             'address',
             'latitude',
@@ -68,7 +72,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         # 3. Add 'username' to the read_only_fields
         read_only_fields = [
             'id',
-            'username', # <-- ADDED
+            'username',
             'student_id',
             'route',
             'pickup_order',
