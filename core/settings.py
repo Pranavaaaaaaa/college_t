@@ -1,40 +1,39 @@
 """
 Django settings for core project.
+This version is configured for Railway.
 """
-import os
+
 from pathlib import Path
-from datetime import timedelta
+import os
 import dj_database_url
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # --- SECURITY & DEPLOYMENT SETTINGS ---
-
-# SECRET_KEY
-# This reads the secret key from Render's environment variables.
-# For local dev, it uses a simple, insecure key.
 SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY', 
-    'django-insecure-x+-_q9-htdre2$b*r_@77!kfrj@3ve&1wbia*nvf1^z##mb)&e'
+    'DJANGO_SECRET_KEY',
+    'django-insecure-local-fallback-key-replace-this'
 )
-
-# DEBUG
-# This will be 'False' on Render (when DJANGO_DEBUG is set)
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
-# ALLOWED_HOSTS
+# --- ALLOWED_HOSTS ---
 ALLOWED_HOSTS = []
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# --- THIS IS THE FIX ---
+# Railway provides this variable automatically
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    # This will be your backend URL, e.g., backend-production-a086.up.railway.app
+    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+# --- END FIX ---
+    
 ALLOWED_HOSTS.append('127.0.0.1')
 ALLOWED_HOSTS.append('localhost')
+# --- END ALLOWED_HOSTS ---
 
 
-# --- APPLICATION DEFINITION ---
-
+# --- Application definition ---
 INSTALLED_APPS = [
     'daphne',
     'channels',
@@ -57,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # For static files
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware', # CORS
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -66,7 +65,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -81,16 +79,14 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.asgi.application'
 
 
 # --- DATABASE ---
-# This is defined ONLY ONCE.
+# Railway provides DATABASE_URL automatically
 DATABASES = {
     'default': dj_database_url.config(
-        # Fallback to local sqlite3 database
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
         conn_max_age=600
     )
@@ -105,7 +101,6 @@ AUTH_PASSWORD_VALIDATORS = [
     { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
-
 # --- INTERNATIONALIZATION ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -114,7 +109,6 @@ USE_TZ = True
 
 
 # --- STATIC FILES ---
-# This is defined ONLY ONCE.
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -128,28 +122,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication', 
     )
 }
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
-
 # --- CHANNELS & REDIS ---
-# This is defined ONLY ONCE.
+# Railway provides REDIS_URL automatically
 REDIS_URL = os.environ.get('REDIS_URL')
 
 if REDIS_URL:
-    # Production (on Render)
+    # Production (on Railway)
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer',
-            'CONFIG': {
-                "hosts": [REDIS_URL],
-            },
+            'CONFIG': { "hosts": [REDIS_URL], },
         },
     }
 else:
@@ -157,54 +147,27 @@ else:
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer',
-            'CONFIG': {
-                "hosts": [('127.0.0.1', 6379)],
-            },
+            'CONFIG': { "hosts": [('127.0.0.1', 6379)], },
         },
     }
 
 # --- CORS (Cross-Origin) ---
+# We will set this in the Railway dashboard
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000'
 ]
-
-RENDER_FRONTEND_URL = os.environ.get('RENDER_FRONTEND_URL') 
-if RENDER_FRONTEND_URL:
-    CORS_ALLOWED_ORIGINS.append(RENDER_FRONTEND_URL)
-
-# Add after CORS_ALLOWED_ORIGINS:
-CORS_ALLOW_CREDENTIALS = True
-
-# Add CSRF trusted origins:
-CSRF_TRUSTED_ORIGINS = []
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
-if RENDER_FRONTEND_URL:
-    CSRF_TRUSTED_ORIGINS.append(RENDER_FRONTEND_URL)
-
-ALLOWED_HOSTS = []
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-ALLOWED_HOSTS.append('127.0.0.1')
-ALLOWED_HOSTS.append('localhost')
-ALLOWED_HOSTS.append('backend-bglm.onrender.com') 
+# We will add the live frontend URL later
+RAILWAY_FRONTEND_URL = os.environ.get('RAILWAY_FRONTEND_URL')
+if RAILWAY_FRONTEND_URL:
+    CORS_ALLOWED_ORIGINS.append(RAILWAY_FRONTEND_URL)
 
 
 # --- CUSTOM APP SETTINGS ---
-
-# ORS API Key
-ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=')
-
-# College Coordinates
+ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=') # Fallback to your local key
 COLLEGE_COORDS = {
     "latitude": 12.9003207224315, 
     "longitude": 77.49589092463299,
 }
-
-# Bus Capacity
 BUS_CAPACITY = 5
-
-# Admin Logout Redirect
 LOGOUT_REDIRECT_URL = '/admin/login/'
