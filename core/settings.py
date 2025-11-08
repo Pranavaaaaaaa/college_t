@@ -13,8 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SECURITY & DEPLOYMENT SETTINGS ---
 SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-local-fallback-key-replace-this'
+    'DJANGO_SECRET_KEY', 
+    'django-insecure-x+-_q9-htdre2$b*r_@77!kfrj@3ve&1wbia*nvf1^z##mb)&e'
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 
