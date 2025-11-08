@@ -16,13 +16,28 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from students.views import unassigned_students_view 
 
 urlpatterns = [
+    path('admin/unassigned_students/', unassigned_students_view, name='unassigned_students'),
+
+    path(
+        'admin/login/',
+        admin.site.login,
+        {'extra_context': {
+            # This variable will be 'https://frontend-n20c.onrender.com' in production
+            # and 'http://localhost:3000' in development
+            'FRONTEND_URL': settings.RENDER_FRONTEND_URL or 'http://localhost:3000'
+        }},
+        name='login'
+    ),
+    
     path('admin/', admin.site.urls),
     path('api/students/', include('students.urls')),
     path('api/transport/', include('transport.urls')),
