@@ -35,8 +35,8 @@ class StudentSignupSerializer(serializers.Serializer):
             password=validated_data['password']
         )
         
-        user.is_staff = True
-        user.is_superuser = True
+        # user.is_staff = True
+        # user.is_superuser = True
         user.save()
 
         # 2. Create the StudentProfile, linking it to the new user
