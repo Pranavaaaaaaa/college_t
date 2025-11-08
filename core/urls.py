@@ -1,23 +1,6 @@
-"""
-URL configuration for core project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings # 1. Make sure settings is imported
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -26,19 +9,22 @@ from students.views import unassigned_students_view
 
 urlpatterns = [
     path('admin/unassigned_students/', unassigned_students_view, name='unassigned_students'),
-
+    
+    # --- THIS IS THE FIX ---
+    # It now correctly uses RAILWAY_FRONTEND_URL from your settings
     path(
         'admin/login/',
         admin.site.login,
         {'extra_context': {
-            # This variable will be 'https://frontend-n20c.onrender.com' in production
-            # and 'http://localhost:3000' in development
-            'FRONTEND_URL': settings.RENDER_FRONTEND_URL or 'http://localhost:3000'
+            'FRONTEND_URL': settings.RAILWAY_FRONTEND_URL or 'http://localhost:3000'
         }},
         name='login'
     ),
+    # -----------------------
+
+    path('admin/', admin.site.urls), # This handles all other admin URLs
     
-    path('admin/', admin.site.urls),
+    # --- (Rest of your API paths) ---
     path('api/students/', include('students.urls')),
     path('api/transport/', include('transport.urls')),
     path('api/drivers/', include('drivers.urls')),
