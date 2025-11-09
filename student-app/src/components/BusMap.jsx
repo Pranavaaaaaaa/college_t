@@ -216,67 +216,86 @@ function BusMap() {
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-bold">Route: {routeInfo.route_name}</h2>
-        <button onClick={handleRecenter} title="Recenter Map" className="text-2xl p-2 rounded-md hover:bg-gray-100">
-          ⌖
-        </button>
-      </div>
-      
-      <div className="relative shadow-lg rounded-md overflow-hidden">
-        <MapContainer 
-          center={mapCenter} 
-          zoom={15} 
-          style={{ height: '400px', width: '100%' }}
-          ref={setMap}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          <Marker position={[myStop.latitude, myStop.longitude]}>
-            <Popup>
-              <strong>My Stop (Pickup #{myStop.pickup_order})</strong><br/>{myStop.address}
-            </Popup>
-          </Marker>
-          {busPosition && (
-            <Marker position={busPosition} icon={busIcon}>
-              <Popup>Bus Location</Popup>
+      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Route: {routeInfo.route_name}</h2>
+          <button
+            onClick={handleRecenter}
+            title="Recenter Map"
+            className="text-2xl p-2 rounded-md hover:bg-gray-100"
+          >
+            ⌖
+          </button>
+        </div>
+
+        <div className="relative shadow-lg rounded-md overflow-hidden mb-6">
+          <MapContainer
+            center={mapCenter}
+            zoom={15}
+            style={{ height: '500px', width: '100%' }}
+            ref={setMap}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            <Marker position={[myStop.latitude, myStop.longitude]}>
+              <Popup>
+                <strong>My Stop (Pickup #{myStop.pickup_order})</strong>
+                <br />
+                {myStop.address}
+              </Popup>
             </Marker>
-          )}
-          {routePolyline.length > 0 && (
-            <Polyline key={JSON.stringify(routePolyline)} positions={routePolyline} color="blue" />
-          )}
-        </MapContainer>
-      </div>
-      
-      <div className="p-4 bg-gray-100 rounded-md mt-4">
-        <strong>Bus Status:</strong>
-        {busPosition ? (
-          <div>
-            <span> {busAddress}</span>
-            {distance !== null && (
-              <div className="mt-2">
-                <strong>Distance to your stop:</strong> 
-                <span className={
-                  distance <= 30 ? "text-red-600 font-bold text-lg animate-pulse" :
-                  distance <= 500 ? "text-red-600 font-bold" : 
-                  "text-green-600"
-                }>
-                  {` ${distance.toFixed(0)} meters`}
-                </span>
-                {distance <= 30 && <span className="ml-2 text-xl">🚨 BUS IS HERE!</span>}
-                {distance > 30 && distance <= 500 && <span className="ml-2">🔥 (Within geofence!)</span>}
-              </div>
+            {busPosition && (
+              <Marker position={busPosition} icon={busIcon}>
+                <Popup>Bus Location</Popup>
+              </Marker>
             )}
-          </div>
-        ) : (
-          <span> Awaiting signal from driver...</span>
-        )}
+            {routePolyline.length > 0 && (
+              <Polyline
+                key={JSON.stringify(routePolyline)}
+                positions={routePolyline}
+                color="blue"
+              />
+            )}
+          </MapContainer>
+        </div>
+
+        <div className="p-4 bg-gray-100 rounded-md">
+          <strong>Bus Status:</strong>
+          {busPosition ? (
+            <div>
+              <span> {busAddress}</span>
+              {distance !== null && (
+                <div className="mt-2">
+                  <strong>Distance to your stop:</strong>
+                  <span
+                    className={
+                      distance <= 30
+                        ? 'text-red-600 font-bold text-lg animate-pulse'
+                        : distance <= 500
+                        ? 'text-red-600 font-bold'
+                        : 'text-green-600'
+                    }
+                  >
+                    {` ${distance.toFixed(0)} meters`}
+                  </span>
+                  {distance <= 30 && (
+                    <span className="ml-2 text-2xl font-bold">🚨 BUS IS HERE!</span>
+                  )}
+                  {distance > 30 && distance <= 500 && (
+                    <span className="ml-2 text-lg">🔥 (Within geofence!)</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <span> Awaiting signal from driver...</span>
+          )}
+        </div>
       </div>
-    </div>
   );
+
 }
 
 export default BusMap;

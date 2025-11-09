@@ -3,7 +3,7 @@ import apiClient from '../api'; // Corrected import path
 
 function DriverLocationTracker() {
   const [isTracking, setIsTracking] = useState(false);
-  const [setPosition] = useState(null);
+  const [,setPosition] = useState(null);
   const [address, setAddress] = useState('Awaiting location...');
   const [error, setError] = useState(null);
   const watchId = useRef(null);
