@@ -160,8 +160,43 @@ CORS_ALLOWED_ORIGINS = [
 # We will add the live frontend URL later
 RAILWAY_FRONTEND_URL = os.environ.get('RAILWAY_FRONTEND_URL')
 if RAILWAY_FRONTEND_URL:
+    frontend_url = RAILWAY_FRONTEND_URL.rstrip('/')
     CORS_ALLOWED_ORIGINS.append(RAILWAY_FRONTEND_URL)
 
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# For Django admin to work across origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+]
+
+if RAILWAY_FRONTEND_URL:
+    frontend_url = RAILWAY_FRONTEND_URL.rstrip('/')
+    CSRF_TRUSTED_ORIGINS.append(frontend_url)
+
+# Add your Railway backend domain
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+
+# Session cookies
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True  # Required for SameSite=None
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
 
 # --- CUSTOM APP SETTINGS ---
 ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=') # Fallback to your local key
