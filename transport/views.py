@@ -405,7 +405,6 @@ def get_route_geometry_view(request):
     }
     body = {
         "coordinates": [[start_lon, start_lat], [end_lon, end_lat]],
-        "radiuses": [50, -1]
     }
 
     try:
