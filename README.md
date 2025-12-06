@@ -177,3 +177,5 @@ This will automatically open the app at http://localhost:3000.
 - **Map not loading:** Ensure you have an internet connection (Leaflet needs to fetch map tiles).
 - **"502 Bad Gateway" for Route:** Check your `ORS_API_KEY` in `settings.py`.
 - **"Failed to send location":** Ensure you are logged in as a Driver and your session hasn't expired.
+
+# There are some deployment code left out in `settings.py`, but the code works well with that too on local system after cloning
