@@ -199,7 +199,7 @@ CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True
 
 # --- CUSTOM APP SETTINGS ---
-ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=') # Fallback to your local key
+ORS_API_KEY = os.environ.get('ORS_API_KEY', 'eiJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZlMDQ0NGUyZDk0YjQzMTJiMjJjMjhlNmEwMjEwYTZjIiwiaCI6Im11cm11cjY0In0=') # Fallback to your local key
 COLLEGE_COORDS = {
     "latitude": 12.9003207224315, 
     "longitude": 77.49589092463299,
